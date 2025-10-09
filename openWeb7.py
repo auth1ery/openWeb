@@ -1,4 +1,4 @@
-# openWeb.py6
+# openWeb.py7
 
 import sys, random, json, os
 from PyQt5.QtWidgets import (
@@ -9,9 +9,13 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile
 from PyQt5.QtCore import QUrl, QTimer, Qt
 import re
 from PyQt5.QtCore import QUrl, QTimer, Qt, QSettings
-
+from PyQt5.QtWebEngineWidgets import QWebEngineDownloadItem
+from pathlib import Path
 import logging
 from PyQt5.QtCore import QStandardPaths
+from pathlib import Path
+import ntpath
+from PyQt5.QtWidgets import QSlider, QHBoxLayout
 
 logging.basicConfig(filename="openweb.log", level=logging.ERROR, format="%(asctime)s - %(message)s")
 
@@ -19,6 +23,7 @@ APP_DATA_DIR = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
 if not os.path.exists(APP_DATA_DIR):
     os.makedirs(APP_DATA_DIR)
 BOOKMARK_FILE = os.path.join(APP_DATA_DIR, "bookmarks.json")
+SESSION_FILE = os.path.join(APP_DATA_DIR, "session.json")
 
 # ---- Browser ----
 class OldInternetBrowser(QMainWindow):
@@ -45,7 +50,8 @@ class OldInternetBrowser(QMainWindow):
             "Reload": self.reload_page,
             "New Tab": self.new_tab,
             "Manager": self.open_manager,
-            "Bookmarks": self.open_bookmarks
+            "Bookmarks": self.open_bookmarks,
+            "Mixer": self.open_tab_mixer
         }.items():
             act = QAction(label, self)
             act.triggered.connect(slot)
@@ -63,10 +69,67 @@ class OldInternetBrowser(QMainWindow):
 
         self.bookmarks = self.load_bookmarks()
         self.new_tab()
+        self.restore_session()
 
         self.restoreGeometry(QSettings("openWeb", "browser").value("geometry", b""))
         self.tabs.currentChanged.connect(lambda _: self.save_geometry())
 
+    def save_session(self):
+        print("Saving session...")  # debug
+        session_data = []
+        for i in range(self.tabs.count()):
+            b = self.tabs.widget(i).findChild(QWebEngineView)
+            if b:
+                session_data.append(b.url().toString())
+        try:
+            with open(SESSION_FILE, "w") as f:
+                json.dump(session_data, f, indent=2)
+            print("Session saved")  # debug
+        except Exception as e:
+            logging.error(f"Error saving session: {e}")
+
+    def restore_session(self):
+        print("Restoring session...")  # debug
+        if os.path.exists(SESSION_FILE):
+            try:
+                with open(SESSION_FILE, "r") as f:
+                    urls = json.load(f)
+                if urls:
+                    self.tabs.clear()
+                    for url in urls:
+                        self.new_tab()
+                        b = self.tabs.currentWidget().findChild(QWebEngineView)
+                        if b:
+                            b.load(QUrl(url))
+                print("Session restored")  # debug
+            except Exception as e:
+                logging.error(f"Error restoring session: {e}")
+
+    # ---- closeEvent override ----
+    def closeEvent(self, event):
+        print("App closing, saving session...")  # debug
+        self.save_session()
+        super().closeEvent(event)
+    
+    def setup_downloads(self, browser: QWebEngineView):
+        browser.page().profile().downloadRequested.connect(self.handle_download)
+
+    def handle_download(self, download):
+        filename = ntpath.basename(download.path())  # works with spaces
+        downloads_path = Path.home() / "Downloads" / filename
+        download.setPath(str(downloads_path))
+        download.accept()
+
+        popup = QLabel(f"Downloading '{filename}'... Check the status at the bottom.", self)
+        popup.setStyleSheet("background: yellow; color: black; padding: 4px; border: 1px solid black;")
+        popup.setWindowFlags(Qt.ToolTip)  # makes it float like a toast
+        popup.move(10, 10)
+        popup.show()
+
+        QTimer.singleShot(3000, lambda: popup.deleteLater())  # clean removal
+
+        self.status_label.setText(f"Status: Downloading '{filename}'...")
+        download.finished.connect(lambda: self.status_label.setText(f"Status: Download finished: '{filename}'"))
 
     def load_bookmarks(self):
         if os.path.exists(BOOKMARK_FILE):
@@ -99,6 +162,7 @@ class OldInternetBrowser(QMainWindow):
         page = QWidget()
         layout = QVBoxLayout(page)
         browser = QWebEngineView()
+        self.setup_downloads(browser)
         browser.setHtml("<h1>Welcome to openWeb!</h1><p>Type a URL above to surf.</p>")
         browser.titleChanged.connect(lambda t, w=page: self.tabs.setTabText(self.tabs.indexOf(w), t[:15] + ("..." if len(t) > 15 else "")))
         layout.addWidget(browser)
@@ -243,6 +307,45 @@ class OldInternetBrowser(QMainWindow):
         del_btn.clicked.connect(del_bookmark)
         dialog.setLayout(layout)
         dialog.exec_()
+        
+    def open_tab_mixer(self):
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Tab Volume Mixer")
+            dialog.setGeometry(300, 300, 350, 50 + 50 * self.tabs.count())
+            layout = QVBoxLayout(dialog)
+
+            for i in range(self.tabs.count()):
+                page = self.tabs.widget(i)
+                browser = page.findChild(QWebEngineView)
+                if not browser: 
+                    continue
+
+                # Tab label
+                tab_label = QLabel(self.tabs.tabText(i))
+                tab_label.setFixedWidth(200)
+
+                # Slider
+                slider = QSlider(Qt.Horizontal)
+                slider.setRange(0, 100)
+                slider.setValue(100)  # full volume by default
+
+                def make_slider_callback(b=browser, s=slider):
+                    def callback():
+                        vol = s.value()
+                        # JS sets all video/audio elements' volume
+                        js = f"document.querySelectorAll('video,audio').forEach(el => el.volume = {vol/100});"
+                        b.page().runJavaScript(js)
+                    return callback
+
+                slider.valueChanged.connect(make_slider_callback())
+
+                row = QHBoxLayout()
+                row.addWidget(tab_label)
+                row.addWidget(slider)
+                layout.addLayout(row)
+
+            dialog.setLayout(layout)
+            dialog.exec_()
 
 app = QApplication(sys.argv)
 window = OldInternetBrowser()
