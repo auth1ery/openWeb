@@ -1,4 +1,4 @@
-# openWeb.py7
+# openWeb.py8
 
 import sys, random, json, os
 from PyQt5.QtWidgets import (
@@ -16,6 +16,31 @@ from PyQt5.QtCore import QStandardPaths
 from pathlib import Path
 import ntpath
 from PyQt5.QtWidgets import QSlider, QHBoxLayout
+from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor
+
+class AdBlocker(QWebEngineUrlRequestInterceptor):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.blocklist = [
+            "doubleclick.net",
+            "googlesyndication.com",
+            "ads.yahoo.com",
+            "adservice.google.com",
+            "taboola.com",
+            "outbrain.com",
+            "amazon-adsystem.com",
+            "scorecardresearch.com",
+            "quantserve.com",
+            "criteo.com",
+            "adnxs.com",
+            "rubiconproject.com",
+            "pubmatic.com",
+        ]
+
+    def interceptRequest(self, info):
+        url = info.requestUrl().toString().lower()
+        if any(bad in url for bad in self.blocklist):
+            info.block(True)
 
 logging.basicConfig(filename="openweb.log", level=logging.ERROR, format="%(asctime)s - %(message)s")
 
@@ -39,6 +64,7 @@ class OldInternetBrowser(QMainWindow):
 
         self.toolbar = QToolBar()
         self.addToolBar(self.toolbar)
+        QWebEngineProfile.defaultProfile().setRequestInterceptor(AdBlocker())
 
         self.url_bar = QLineEdit()
         self.url_bar.returnPressed.connect(self.start_loading)
@@ -122,7 +148,7 @@ class OldInternetBrowser(QMainWindow):
 
         popup = QLabel(f"Downloading '{filename}'... Check the status at the bottom.", self)
         popup.setStyleSheet("background: yellow; color: black; padding: 4px; border: 1px solid black;")
-        popup.setWindowFlags(Qt.ToolTip)  # makes it float like a toast
+        popup.setWindowFlags(Qt.ToolTip)  # makes it float like a toast or some shit idk
         popup.move(10, 10)
         popup.show()
 
@@ -163,7 +189,7 @@ class OldInternetBrowser(QMainWindow):
         layout = QVBoxLayout(page)
         browser = QWebEngineView()
         self.setup_downloads(browser)
-        browser.setHtml("<h1>Welcome to openWeb!</h1><p>Type a URL above to surf.</p>")
+        browser.setHtml("<h1>Welcome to openWeb!</h1><p>Type a URL above to surf.</p><p>Version 1.7</p>")
         browser.titleChanged.connect(lambda t, w=page: self.tabs.setTabText(self.tabs.indexOf(w), t[:15] + ("..." if len(t) > 15 else "")))
         layout.addWidget(browser)
         self.tabs.addTab(page, f"Tab {self.tabs.count()+1}")
@@ -238,7 +264,7 @@ class OldInternetBrowser(QMainWindow):
 
     def check_load(self, ok):
         if not ok:
-            self.status_label.setText("Status: Offline!")
+            self.status_label.setText("Status: Offline, check your internet.")
         else:
             self.status_label.setText("Status: Viewing")
 
@@ -269,7 +295,7 @@ class OldInternetBrowser(QMainWindow):
         dialog = QDialog(self)
         dialog.setWindowTitle("Bookmarks")
         dialog.setGeometry(250,250,400,400)
-        layout = QVBoxLayout(dialog)
+        layout = QVBoxLayout(dialog) # i hate everything i wanna die
         list_widget = QListWidget()
         for bm in self.bookmarks:
             list_widget.addItem(f"{bm['title']} - {bm['url']}")
@@ -327,7 +353,7 @@ class OldInternetBrowser(QMainWindow):
                 # Slider
                 slider = QSlider(Qt.Horizontal)
                 slider.setRange(0, 100)
-                slider.setValue(100)  # full volume by default
+                slider.setValue(100)  # full volume by default because we love rupturing people's eardrums
 
                 def make_slider_callback(b=browser, s=slider):
                     def callback():
