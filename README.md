@@ -7,7 +7,7 @@ thats the purpose of this browser right? you can access most websites with ease!
 <h2>why you should try it</h2>
 it runs as fast as a usual modern browser, it works with most websites easily, it can download files with ease, has little to no clutter, doesnt bloat your system, and doesnt scream at you when you uninstall it.
 
-<h2>features!<h2>
+<h2>features!</h2>
 - navigation
 - tabs
 - tab mixer (change each tab's volume precisely)
