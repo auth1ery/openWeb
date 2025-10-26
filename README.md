@@ -1,13 +1,13 @@
 # openWeb
 a distraction-free, sleek, and performance-first old school browser, built for daily and normal usage filled to the brim with useful options
 
-<h2>browse the web!</h2>
+**browse the web!**
 thats the purpose of this browser right? you can access most websites with ease! just type in the url, or just search it, and easily access the page with nothing else getting in your way
 
-<h2>why you should try it</h2>
+**why you should try it**
 it runs as fast as a usual modern browser, it works with most websites easily, it can download files with ease, has little to no clutter, doesnt bloat your system, and doesnt scream at you when you uninstall it.
 
-<h2>features!</h2>
+**features!**
 - navigation
 - tabs
 - tab mixer (change each tab's volume precisely)
