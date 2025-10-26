@@ -23,7 +23,8 @@ this repository isnt for contributors or pull requests, the official code should
 notes before making your own version:  
 - this is based off chromium
 - this uses PyQt5, not PyQt6.
-- this is as-is, if you break it somehow, too bad
+- this is as-is, if you break it somehow, too bad  
+
   1. fork or download zip or clone this repository
   2. edit the code to your demands
   3. you can distribute it, shapeshift the browser to cook pasta for you, its all free!
