@@ -3,7 +3,7 @@
 # Builds openWeb9.py and signs the resulting EXE.
 # Nothing malicious: just build and sign.
 
-$pythonFile = "openWeb9.py"
+$pythonFile = "openWeb10.py"
 $outputDir = "dist"
 $thumbprint = "ED3F76C0991BE3C49EB002D15D1FE419BFA30195"
 $timestampUrl = "http://timestamp.digicert.com"
@@ -52,3 +52,4 @@ if ($LASTEXITCODE -eq 0) {
 } else {
     Write-Host "`nSigning failed. Check your certificate thumbprint or SDK path." -ForegroundColor Red
 }
+
