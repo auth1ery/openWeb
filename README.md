@@ -13,7 +13,8 @@ it runs as fast as a usual modern browser, it works with most websites easily, i
 - tab mixer (change each tab's volume precisely)
 - bookmarks
 - manager for cache and cookies
-- and extensions!
+- privacy
+- and kinda nostalgic
   
 # download
 visit this website to download the official version: https://fishery.neocities.org
