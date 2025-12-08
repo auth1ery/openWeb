@@ -14,6 +14,8 @@ it runs as fast as a usual modern browser, it works with most websites easily, i
 - bookmarks
 - manager for cache and cookies
 - privacy
+- privacy
+- privacy
 - and kinda nostalgic
   
 # download
