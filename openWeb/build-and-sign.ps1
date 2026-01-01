@@ -1,7 +1,8 @@
 # build-and-sign.ps1
 # ------------------
-# Builds openWeb9.py and signs the resulting EXE.
-# Nothing malicious: just build and sign.
+# Builds the python file and signs the resulting EXE.
+
+# If you are contributing, you should probably not use my thumbprint and instead use yours.
 
 $pythonFile = "openWeb10.py"
 $outputDir = "dist"
@@ -52,4 +53,5 @@ if ($LASTEXITCODE -eq 0) {
 } else {
     Write-Host "`nSigning failed. Check your certificate thumbprint or SDK path." -ForegroundColor Red
 }
+
 
